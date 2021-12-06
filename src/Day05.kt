@@ -1,6 +1,5 @@
 import kotlin.math.*
-
-class point {
+/*class point {
     var x: Int
     var y: Int
 
@@ -14,10 +13,15 @@ class point {
         y = initY
     }
 
-    override fun equals(p: Any?): Boolean{
-        return ((p is point)&&(p.x==x)&&(p.y==y))
+    override fun equals(other: Any?): Boolean{
+        return ((other is point)&&(other.x==x)&&(other.y==y))
     }
-}
+
+    override fun hashCode(): Int {
+        return x*100 + y
+    }
+}*/
+data class point(var x: Int = 0, var y: Int = 0)
 
 fun main() {
     fun readLn(input: List<String>): ArrayList<IntArray>{
@@ -29,8 +33,7 @@ fun main() {
         return output
     }
 
-    var zaehler = 0
-    fun calcSchnittpunkt(x0: Int, x1: Int, y0: Int, y1:Int, xt0: Int, xt1: Int, yt0: Int, yt1:Int): ArrayList<point>{
+     fun calcSchnittpunkt(x0: Int, x1: Int, y0: Int, y1:Int, xt0: Int, xt1: Int, yt0: Int, yt1:Int): ArrayList<point>{
         //println(listOf(x0, x1, y0, y1))
 
         var ps = ArrayList<point>()
@@ -49,6 +52,7 @@ fun main() {
                     //andernfalls haben wir keinen Schnittpunkt
                 }
             }else{ //wenn die zweite Gerade nicht parallel zur y-Achse ist, gibt es genau einen Schnittpunkt, an x = x0
+                mt1 = (yt1-yt0)/(xt1-xt0)//Steigung der zweiten Gerade
                 var p = point()
                 p.x = x0
                 p.y = (x0-xt0)*mt1 + yt0
@@ -58,7 +62,6 @@ fun main() {
                 }
             }
         }else {
-            if ( (y1-y0) % (x1-x0) != 0 ){ println("FEHLER 2 HIER")}
             m1 = (y1 - y0) / (x1 - x0) //Steigung der ersten Gerade
         }
         if (xt1==xt0){ //erste Gerade ist nicht parellel zur y-Achse, erste schon
@@ -74,7 +77,6 @@ fun main() {
                 //dann habe ich schon die gemeinsamen Schnittpunkte hinzugefügt
             }
         }else {
-            if ( (yt1-yt0) % (xt1-xt0) != 0 ){ println("FEHLER HIER")}
             mt1 = (yt1-yt0)/(xt1-xt0)//Steigung der zweiten Gerade
         }
 
@@ -147,14 +149,17 @@ fun main() {
         for (i in 0..s-1){
             for (j in i+1..s-1){
                 var ps = calcSchnittpunkt(lines[i][0],lines[i][2],lines[i][1],lines[i][3], lines[j][0],lines[j][2],lines[j][1],lines[j][3])
-                for (p in ps){
+                sp.addAll(ps)
+                /*for (p in ps){
                     if (!sp.contains(p)){
                         sp.add(p)//Schnittpunkt abspeichern, falls noch nicht vorhanden
                     }
-                }
+                }*/
             }
         }
-        return sp.size
+        //println(sp.groupingBy { it }.eachCount().map { it.key }.size)
+        return sp.distinct().size
+        //return sp.size
     }
 
     var dayname = "Day05"
@@ -165,7 +170,5 @@ fun main() {
 
     var input = readInput(dayname)
     println(part1(input))
-    zaehler = 0
     println(part2(input))
-    println(zaehler)
 }
