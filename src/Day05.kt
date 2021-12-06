@@ -1,5 +1,5 @@
 import kotlin.math.*
-import kotlin.system.measureNanoTime
+//import kotlin.system.measureNanoTime
 
 /*class point {
     var x: Int
@@ -178,5 +178,5 @@ fun main() {
     for ( i in 0..9){
         v+=measureNanoTime { part2(input) } / 1000
     }
-    println(v/10)/*
+    println(v/10)*/
 }
