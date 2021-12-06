@@ -1,4 +1,6 @@
 import kotlin.math.*
+import kotlin.system.measureNanoTime
+
 /*class point {
     var x: Int
     var y: Int
@@ -25,9 +27,9 @@ data class point(var x: Int = 0, var y: Int = 0)
 
 fun main() {
     fun readLn(input: List<String>): ArrayList<IntArray>{
-        var output = ArrayList<IntArray>()
+        val output = ArrayList<IntArray>()
         for (z in input) {
-            var r = z.split(" -> ").map { it.split(',').map { it.toInt() } }
+            val r = z.split(" -> ").map { it.split(',').map { it.toInt() } }
             output.add((r[0]+r[1]).toIntArray())
         }
         return output
@@ -36,7 +38,7 @@ fun main() {
      fun calcSchnittpunkt(x0: Int, x1: Int, y0: Int, y1:Int, xt0: Int, xt1: Int, yt0: Int, yt1:Int): ArrayList<point>{
         //println(listOf(x0, x1, y0, y1))
 
-        var ps = ArrayList<point>()
+        val ps = ArrayList<point>()
         var m1 = 0
         var mt1 = 0
         if (x1==x0){
@@ -53,7 +55,7 @@ fun main() {
                 }
             }else{ //wenn die zweite Gerade nicht parallel zur y-Achse ist, gibt es genau einen Schnittpunkt, an x = x0
                 mt1 = (yt1-yt0)/(xt1-xt0)//Steigung der zweiten Gerade
-                var p = point()
+                val p = point()
                 p.x = x0
                 p.y = (x0-xt0)*mt1 + yt0
                 if ( (x0 <= max(xt0,xt1)) && (x0 >= min(xt0,xt1))
@@ -66,7 +68,7 @@ fun main() {
         }
         if (xt1==xt0){ //erste Gerade ist nicht parellel zur y-Achse, erste schon
             if (x1!=x0){
-                var p = point()
+                val p = point()
                 p.x = xt0
                 p.y = (xt0-x0)*m1 + y0
                 if ( (xt0 <= max(x0,x1)) && (xt0 >= min(x0,x1))
@@ -80,8 +82,8 @@ fun main() {
             mt1 = (yt1-yt0)/(xt1-xt0)//Steigung der zweiten Gerade
         }
 
-        var x = (yt0-y0) + x0*m1 - xt0*mt1
-        var m = m1-mt1
+        val x = (yt0-y0) + x0*m1 - xt0*mt1
+         val m = m1-mt1
         if (m == 0){
             //Linien sind parallel,
             if (y0 == (x0-xt0)*mt1 + yt0){ //nehme den Punkt an x0 und prüfe ob er auf beiden draufliegt, bzw dort gleich ist
@@ -95,7 +97,7 @@ fun main() {
                 // liegen nebeneinander
             }
         }else{ //Sie sind nicht parallel, haben also einen Schnittpunkt
-            var p = point()
+            val p = point()
             if (x%m==0){
                 p.x = x / m
                 if ( (p.x >= min(x0,x1)) && (p.x <= max(x0,x1))
@@ -112,8 +114,8 @@ fun main() {
     }
 
     fun part1(input: List<String>): Int {
-        var lines = ArrayList<IntArray>()
-        var xy = readLn(input)
+        val lines = ArrayList<IntArray>()
+        val xy = readLn(input)
         for (v in xy){
             if ( (v[0] == v[2])||(v[1]==v[3]) ){
                 lines.add(v)
@@ -122,11 +124,11 @@ fun main() {
         //wieviele Schnittpunkte gibt es? (Ein Schnittpunkt, an dem sich x Linien schneiden ist 1,
         // bzw. es ist zu beachten, ob der Schnittpunkt zweier Linien schonmal Schnittpunkt zweier anderer Linien war
         val s = lines.size
-        var sp = ArrayList<point>()
+        val sp = ArrayList<point>()
         for (i in 0..s-1){
             for (j in i+1..s-1){
                 //Schnittpunkt von lines[i] mit lines[j] berechnen
-                var ps = calcSchnittpunkt(lines[i][0],lines[i][2],lines[i][1],lines[i][3], lines[j][0],lines[j][2],lines[j][1],lines[j][3])
+                val ps = calcSchnittpunkt(lines[i][0],lines[i][2],lines[i][1],lines[i][3], lines[j][0],lines[j][2],lines[j][1],lines[j][3])
                 for (p in ps){
                     /*println("Schnittpunkt")
                     println(p.x.toString() + "|" + p.y.toString())
@@ -143,12 +145,12 @@ fun main() {
     }
 
     fun part2(input: List<String>): Int {
-        var lines = readLn(input)
+        val lines = readLn(input)
         val s = lines.size
-        var sp = ArrayList<point>()
+        val sp = ArrayList<point>()
         for (i in 0..s-1){
             for (j in i+1..s-1){
-                var ps = calcSchnittpunkt(lines[i][0],lines[i][2],lines[i][1],lines[i][3], lines[j][0],lines[j][2],lines[j][1],lines[j][3])
+                val ps = calcSchnittpunkt(lines[i][0],lines[i][2],lines[i][1],lines[i][3], lines[j][0],lines[j][2],lines[j][1],lines[j][3])
                 sp.addAll(ps)
                 /*for (p in ps){
                     if (!sp.contains(p)){
@@ -162,13 +164,19 @@ fun main() {
         //return sp.size
     }
 
-    var dayname = "Day05"
+    val dayname = "Day05"
 
-    var testInput = readInput(dayname+"_test")
+    val testInput = readInput(dayname+"_test")
     check(part1(testInput) == 5)
     check(part2(testInput) == 12 )
 
-    var input = readInput(dayname)
+    val input = readInput(dayname)
     println(part1(input))
     println(part2(input))
+
+    /*var v = 0L
+    for ( i in 0..9){
+        v+=measureNanoTime { part2(input) } / 1000
+    }
+    println(v/10)/*
 }
