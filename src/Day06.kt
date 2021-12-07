@@ -1,4 +1,5 @@
 import java.math.BigInteger
+//import kotlin.system.measureNanoTime
 
 fun main() {
  /*   fun direkteNachfolger(alter: Int, days: Int): ArrayList<Int>{
@@ -48,7 +49,7 @@ fun main() {
     }
 */
     fun vorberechnenP2(days: Int): ArrayList<BigInteger> {
-        var v = ArrayList<BigInteger>()
+        val v = ArrayList<BigInteger>(days)
         v.add(1.toBigInteger()) //Tag 0
         for (d in 1..7){
             v.add(2.toBigInteger()) //Tag 1 bis 7 (man hat ein Kind gekriegt + man selbst)
@@ -92,4 +93,11 @@ fun main() {
     input = input[0].split(",")
     println(part1(input))
     println(part2(input))
+
+   /* var v = 0L
+    val runs = 10
+     for ( i in 0..runs-1){
+         v+=measureNanoTime {   input = input[0].split(","); part2(input) } / 1000
+     }
+     println(v/runs)*/
 }
