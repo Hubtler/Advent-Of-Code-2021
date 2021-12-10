@@ -9,7 +9,7 @@ fun main() {
     }
 
     // test if implementation meets criteria from the description, like:
-    val dayname = "Day0"
+    val dayname = "Day1"
 
     val testInput = readInput(dayname+"_test")
     //check(part1(testInput) == )
