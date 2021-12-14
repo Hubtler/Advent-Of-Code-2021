@@ -35,14 +35,14 @@ fun main() {
         val s = ArrayList<String>()
         var str = ""
         for (i in 0..maxx){
-            str += '.'
+            str += ' '
         }
         for (j in 0..maxy){
             s.add(str)
         }
         for (p in dots){
             val st =  s[p.y].toCharArray()
-            st[p.x] = '#'
+            st[p.x] = '0'
             s[p.y] = st.joinToString("")
         }
         var r = ""
