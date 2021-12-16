@@ -101,5 +101,4 @@ fun main() {
     val input = readInput(dayname)
     println(part1(input))
     println(part2(input))
-
 }
