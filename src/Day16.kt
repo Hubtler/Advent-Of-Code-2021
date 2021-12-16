@@ -31,10 +31,8 @@ fun main() {
                         val length = s.substring(index,index+lengthBits).toInt(2)
                         index += lengthBits
                         var used = 0
-                        while (used+6 <= length){ //falls ich noch mindestens 6 Zeichen hab
+                        while (used < length){ //falls ich noch mindestens 6 Zeichen hab
                             val p = Packet(s.subSequence(index+used,index+length).toString())
-                            //Es gibt Pakete mit 18 Bit, die Pakete mit 26 Bit beinhalten, die 26 Bit zählen dann nicht dazu
-                            //var p = Packet(s.substring(index+used))
                             subpackets.add(p)
                             used += p.length
                         }
@@ -52,7 +50,6 @@ fun main() {
                         }
                         index += used
                     }
-
                 }
             }
             length = index
