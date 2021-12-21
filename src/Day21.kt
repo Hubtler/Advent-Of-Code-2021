@@ -68,7 +68,6 @@ fun main() {
         }
     }
 
-
     fun part2(p1: Int, p2: Int): BigInteger {
         val wons1 = mutableMapOf<Int,BigInteger>()
         createWonList(p1,0,0,1.toBigInteger(),wons1)
