@@ -101,15 +101,7 @@ fun main() {
         }
 
         fun volume(): BigInteger{ //stimmt nur, falls disjunkt
-            var vol = 0.toBigInteger()
-            for (c1ind in cubes.indices){
-                val x = cubes[c1ind].volume()
-                if (x < 0.toBigInteger()){
-                    println(cubes[c1ind].toString() + " hat Volumen " + cubes[c1ind].volume())
-                }
-                vol += cubes[c1ind].volume()
-            }
-            return vol
+            return cubes.sumOf{ it.volume() }
         }
         fun toOBJ(): Pair<StringBuilder, StringBuilder>{
             val v = StringBuilder()
@@ -155,24 +147,24 @@ fun main() {
         for (cube in cubeList.cubes){
             newCubeList.turnOn(cube.intersection(c50))
         }
-        writeFile("src/Day22_Part1.obj", newCubeList.toOBJ() )
+        //writeFile("src/Day22_Part1.obj", newCubeList.toOBJ() )
         return newCubeList.volume()
     }
 
     fun part2(input: List<String>): BigInteger {
         val cubeList = parse(input)
-        writeFile("src/Day22_Part2.obj", cubeList.toOBJ() )
+        //writeFile("src/Day22_Part2.obj", cubeList.toOBJ() )
         return cubeList.volume()
     }
 
     // test if implementation meets criteria from the description, like:
     val dayname = "Day22"
 
-    /*var testInput = readInput(dayname+"_test")
+    var testInput = readInput(dayname+"_test")
     check(part1(testInput) == 590784.toBigInteger())
     testInput = readInput(dayname+"_test2")
     check(part1(testInput) == 474140.toBigInteger())
-    check(part2(testInput) == 2758514936282235.toBigInteger()) */
+    check(part2(testInput) == 2758514936282235.toBigInteger())
 
     val input = readInput(dayname)
     println(part1(input))
