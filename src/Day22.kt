@@ -1,3 +1,4 @@
+import java.io.File
 import java.math.BigInteger
 
 fun main() {
@@ -38,6 +39,40 @@ fun main() {
         override fun toString(): String{
             return xmin.toString() + ".." + xmax + " x " + ymin + ".." + ymax + " x " + zmin + ".." + zmax
         }
+
+        fun toOBJ(nr: Int): Pair<String, String>{
+            fun createV(x: Double, y: Double, z: Double): String{
+                return "v " + x + " " + y + " " + z + "\n"
+            }
+            fun createF(v1: Int, v2: Int, v3: Int): String{
+                return "f " + (8*nr+v1) + " " + (8*nr+v2) + " " + (8*nr+v3) + "\n"
+            }
+            var v = "" //8 Knoten
+            v += createV((xmin - 0.5), ymin - 0.5, zmin- 0.5) //1
+            v += createV(xmin - 0.5, ymin - 0.5, zmax + 0.5) //2
+            v += createV(xmin - 0.5, ymax + 0.5, zmin - 0.5) //3
+            v += createV(xmin - 0.5, ymax + 0.5, zmax + 0.5) //4
+            v += createV(xmax + 0.5, ymin - 0.5, zmin - 0.5) //5
+            v += createV(xmax + 0.5, ymin - 0.5, zmax + 0.5) //6
+            v += createV(xmax + 0.5, ymax + 0.5, zmin - 0.5) //7
+            v += createV(xmax + 0.5, ymax + 0.5, zmax - 0.5) //8
+            // Knoten x hat Index 8*nr+x
+            var f = "" //6 Flächen a 2 Dreiecke
+            f += createF(1,2,3)
+            f += createF(2,3,4)
+            f += createF(1,2,5)
+            f += createF(2,5,6)
+            f += createF(3,4,7)
+            f += createF(4,7,8)
+            f += createF(2,4,6)
+            f += createF(4,6,8)
+            f += createF(1,3,5)
+            f += createF(3,5,7)
+            f += createF(5,6,8)
+            f += createF(5,7,8)
+
+            return Pair(v,f)
+        }
     }
 
     class Cuboidlist(){
@@ -76,6 +111,17 @@ fun main() {
             }
             return vol
         }
+        fun toOBJ(): Pair<StringBuilder, StringBuilder>{
+            val v = StringBuilder()
+            val f = StringBuilder()
+            var ind = 0
+            for (c in cubes){
+                val s = c.toOBJ(ind++)
+                v.append( s.first )
+                f.append( s.second )
+            }
+            return Pair(v,f)
+        }
     }
 
     fun parse(input: List<String>): Cuboidlist{
@@ -98,6 +144,10 @@ fun main() {
         return cubelist
     }
 
+    fun writeFile(filename: String, vf: Pair<StringBuilder, StringBuilder>){
+        File(filename).writeText( vf.first.toString() + vf.second.trim() )
+    }
+
     fun part1(input: List<String>): BigInteger {
         val cubeList = parse(input)
         val c50 = Cuboid(-50,50,-50,50,-50,50)
@@ -105,22 +155,24 @@ fun main() {
         for (cube in cubeList.cubes){
             newCubeList.turnOn(cube.intersection(c50))
         }
+        writeFile("src/Day22_Part1.obj", newCubeList.toOBJ() )
         return newCubeList.volume()
     }
 
     fun part2(input: List<String>): BigInteger {
         val cubeList = parse(input)
+        writeFile("src/Day22_Part2.obj", cubeList.toOBJ() )
         return cubeList.volume()
     }
 
     // test if implementation meets criteria from the description, like:
     val dayname = "Day22"
 
-    var testInput = readInput(dayname+"_test")
+    /*var testInput = readInput(dayname+"_test")
     check(part1(testInput) == 590784.toBigInteger())
     testInput = readInput(dayname+"_test2")
     check(part1(testInput) == 474140.toBigInteger())
-    check(part2(testInput) == 2758514936282235.toBigInteger())
+    check(part2(testInput) == 2758514936282235.toBigInteger()) */
 
     val input = readInput(dayname)
     println(part1(input))
