@@ -38,8 +38,13 @@ fun main() {
         }
 
         fun add(other: ValRan): ValRan{
+            if (other.areSaveEqual(ValRan(0L))){
+                return this
+            }
+            if (areSaveEqual(ValRan(0L))){
+                return other
+            }
             val output = ValRan(0)
-            //TODO, falls einer der beiden ValRans 0 ist, kann ich sogar den String vereinfachen!
             output.str = "(" + str + "+" + other.str + ")"
             output.rangeFrom = rangeFrom + other.rangeFrom
             output.rangeTo = rangeTo + other.rangeTo
@@ -47,9 +52,19 @@ fun main() {
         }
 
         fun mul(other: ValRan): ValRan{
+            if (other.areSaveEqual(ValRan(1L))){
+                return this
+            }
+            if (areSaveEqual(ValRan(1L))){
+                return other
+            }
+            if (other.areSaveEqual(ValRan(0L))){
+                return ValRan(0L)
+            }
+            if (!other.areSaveEqual(ValRan(26L))){
+                println("mul : NICHT 26, sondern " + other.str)
+            }
             val output = ValRan(0)
-            //TODO, falls einer der beiden ValRans 1 ist, kann ich sogar den String vereinfachen!
-            //TODO, ist einer der beiden ValRans 0, so dürfte shortIt auchden String vereinfachen
             output.str = "(" + str + "*" + other.str + ")"
             val ac = rangeFrom * other.rangeFrom
             val ad = rangeFrom * other.rangeTo
@@ -62,6 +77,15 @@ fun main() {
         }
 
         fun div(other: ValRan): ValRan{
+            if (other.areSaveEqual(ValRan(1L))){
+                return this
+            }
+            if (areSaveEqual(ValRan(1L))){
+                return other
+            }
+            if (!other.areSaveEqual(ValRan(26L))){
+                println("div : NICHT 26")
+            }
             val output = ValRan(0)
             output.str = "(" + str + "/" + other.str + ")"
             val ac = rangeFrom / other.rangeFrom
@@ -79,6 +103,9 @@ fun main() {
         }
 
         fun mod(other: ValRan): ValRan{
+            if (!other.areSaveEqual(ValRan(26L))){
+                println("mod : NICHT 26")
+            }
             val output = ValRan(1)
             output.str = "(" + str + "%" + other.str + ")"
 
@@ -138,8 +165,8 @@ fun main() {
                                 newInput.str = "input["+ c++ +"]"
                                 variables[com[1].first()] = newInput
                 }
-                "add" ->  variables[com[1].first()] = getVar(com[2]).add(variables[com[1].first()]!!)
-                "mul" ->  variables[com[1].first()] = getVar(com[2]).mul(variables[com[1].first()]!!)
+                "add" ->  variables[com[1].first()] = variables[com[1].first()]!!.add( getVar(com[2]) )
+                "mul" ->  variables[com[1].first()] = variables[com[1].first()]!!.mul( getVar(com[2]) )
                 "div" ->  variables[com[1].first()] = variables[com[1].first()]!!.div( getVar(com[2]) )
                 "mod" ->  variables[com[1].first()] = variables[com[1].first()]!!.mod( getVar(com[2]) )
                 "eql" ->  {
@@ -167,7 +194,7 @@ fun main() {
         variables.put('z', ValRan(0))
         for (line in code){
             nextLine(line, variables) //TODO testen, ob geänderte inhalte direkt ankommen, oder variables = davorgeschriebn werden muss
-            println(variables.map { it.value.str })
+            //println(variables.map { it.value.str })
         }
 
         return variables['z']!!
