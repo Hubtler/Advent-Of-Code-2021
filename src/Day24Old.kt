@@ -46,7 +46,7 @@ fun main() {
             val p4 = lh.second / x.lh.second
             return Range(Pair( minOf(p1,p2,p3,p4), maxOf(p1,p2,p3,p4)))
         }
-        fun mod(x: Range): Range{
+        fun mod(x: Range): Range{ //TODO
             val p1 = lh.first * x.lh.first
             val p2 = lh.first * x.lh.second
             val p3 = lh.second * x.lh.first
