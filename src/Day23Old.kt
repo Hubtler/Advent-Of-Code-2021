@@ -38,12 +38,26 @@ fun main() {
             return b
         }
 
+        fun sitsPerfectly(x: Int, y: Int): Boolean{
+            //Nach oben können Sie nur, wenn unter Ihnen einer ist, der raus will, oder sie in der falschen Spalte sitzen
+            var b = true
+            if (goals[map[x][y]!!] != y ){ //ich sitze in der falschen Spalte
+                b = false
+            }else{ //ich sitze in der richtigen Spalte
+                //unter mir, dürfen nur diesselben sein
+                for (ux in x..1+tiefe){
+                    b = b && (map[ux][y] == map[x][y])
+                }
+            }
+            return b
+        }
+
         fun movable(k: Pair<Int,Int>): Boolean{
             if (map[k.first][k.second] !in 'A'..'D'){
                 return false
             }
 
-            if (kommtVon.second && !((dran.second == goals[map[dran.first]!![dran.second]]) && (map[dran.first+1]!![dran.second]!='.'))){
+            if (kommtVon.second && !(sitsPerfectly(dran.first,dran.second))){
                 //Bin ich aufm Weg ins Ziel, darf sich nur dran bewegen
                 //und bin ich noch nicht im Ziel angekommen, so darf sich nur dran bewegen
                 return (k==dran)
@@ -64,26 +78,12 @@ fun main() {
             }
         }
 
-        fun sitsPerfectly(x: Int, y: Int): Boolean{
-            //Nach oben können Sie nur, wenn unter Ihnen einer ist, der raus will, oder sie in der falschen Spalte sitzen
-            var b = true
-            if (goals[map[x][y]!!] != y ){ //ich sitze in der falschen Spalte
-                b = false
-            }else{ //ich sitze in der richtigen Spalte
-                //unter mir, dürfen nur diesselben sein
-                for (ux in x..1+tiefe){
-                    b = b && (map[ux][y] == map[x][y])
-                }
-            }
-            return b
-        }
-
         fun goTo(x: Int, y: Int, zuX: Int, zuY:Int): Long{
             val costs = mutableMapOf('A' to 1, 'B' to 10, 'C' to 100, 'D' to 1000)
             if ( (Pair(x,y)==dran)&&(Pair(zuX,zuY)==kommtVon.first) ){
                 return Long.MAX_VALUE
             }
-            var newmap = map.map { it.toMutableList() }.toMutableList()
+            val newmap = map.map { it.toMutableList() }.toMutableList()
             newmap[zuX]!![zuY] = map[x][y]
             newmap[x]!![y] = '.'
             return move(newmap, Pair(zuX,zuY), Pair(Pair(x,y), ((x==1)&&(Pair(x,y)!=dran)) || kommtVon.second), costsUntilNow + costs[map[x][y]]!!)
@@ -110,7 +110,7 @@ fun main() {
                     if (canGoToGoal(Pair(x,y)) && (map[x+1][y] == '.')){
                         min = minOf( min, goTo(x,y,x+1,y) )
                     }
-                    if (!(sitsPerfectly(x,y)) &&(map[x-1][y] == '.')){
+                    if ((!sitsPerfectly(x,y)) &&(map[x-1][y] == '.')){
                         min = minOf( min, goTo(x,y,x-1,y) )
                     }
                     if (map[x][y-1] == '.'){
