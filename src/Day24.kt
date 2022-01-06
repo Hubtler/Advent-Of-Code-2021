@@ -16,6 +16,21 @@ fun main() {
             return (inputNr==null)
         }
 
+        fun minValue(): Int{
+            if (isDigit()){
+                return value
+            }else{
+                return value + 1
+            }
+        }
+        fun maxValue(): Int{
+            if (isDigit()){
+                return value
+            }else{
+                return value + 9
+            }
+        }
+
         override fun toString(): String {
             if (isDigit()){
                 return value.toString()
@@ -115,6 +130,24 @@ fun main() {
             }
             return v
         }
+        fun minValue(): Long{
+            var v = biggest.minValue().toLong()
+            var next = biggest
+            while (next.smallerDigit != null) {
+                next = next.smallerDigit!!
+                v = v * 26L + next.minValue().toLong()
+            }
+            return v
+        }
+        fun maxValue(): Long{
+            var v = biggest.maxValue().toLong()
+            var next = biggest
+            while (next.smallerDigit != null) {
+                next = next.smallerDigit!!
+                v = v * 26L + next.maxValue().toLong()
+            }
+            return v
+        }
     } //Ende der Klasse Sys26
 
     fun getNextInput( inputNr: Int ): Sys26{
@@ -124,19 +157,28 @@ fun main() {
     }
     fun div26(s: Sys26): Sys26{
         var newS = s.copy()
-        if (newS.smallest.biggerDigit != null){
-            newS.smallest = newS.smallest.biggerDigit!!
-            newS.smallest.smallerDigit = null
+        if (newS.smallest.maxValue() < 26){
+            if (newS.smallest.biggerDigit != null){
+                newS.smallest = newS.smallest.biggerDigit!!
+                newS.smallest.smallerDigit = null
+            }else{
+                newS = Sys26(0)
+            }
         }else{
-            newS = Sys26(0)
+            println("ERROR, beim Dividieren könnte ein Input zu einem Überschlag führen (z.B. Input+23 / 26 kann ja auch 1 sein)")
         }
         return newS
     }
 
     fun mod26(s: Sys26): Sys26{
-        val newS = Sys26( s.smallest.value )
-        newS.smallest.inputNr = s.smallest.inputNr
-        return newS
+        if (s.smallest.maxValue() < 26){
+            val newS = Sys26( s.smallest.value )
+            newS.smallest.inputNr = s.smallest.inputNr
+            return newS
+        }else{
+            println("ERROR, Mod könnte auch was anderes sein, falls input groß genug ist")
+            return s
+        }
     }
 
     fun mult26(s: Sys26): Sys26{
@@ -236,53 +278,18 @@ fun main() {
     }
 
     fun canBeEqual(a: Sys26, b: Sys26): Boolean{
-        //Idee: für die Inputs, jedes mal die Werte 0 bis 9 einsetzen, und schauen, ob es wahr sein kann
-        if (a.inputIndepent() && b.inputIndepent()){
-            return (a.value() == b.value())
-        }
-        var aNext: AbstractDigit? = a.smallest
-        var bNext: AbstractDigit? = b.smallest
-        var b = true //können gleich sein
-        while ( (aNext != null) && (bNext != null) ){
-            if (aNext!!.isDigit() && bNext!!.isDigit()){
-                b = b && (aNext!!.value == bNext!!.value)
-            }else{
-                if (aNext!!.isDigit()){ // also a = b + inp
-                    val dif =  aNext!!.value - bNext!!.value
-                    if ( (dif < 0) || (dif > 9) ){
-                        return false //TODO Problem, falls überschlag entsteht
-                    }
-                }
-                if (bNext!!.isDigit()){ // also b = a + inp
-                    val dif =  bNext!!.value - aNext!!.value
-                    if ( (dif < 0) || (dif > 9) ){
-                        return false
-                    }
-                }
-                if (!(aNext!!.isDigit()) && !(bNext!!.isDigit())){
-                    // a + inp1 = b + inp2, also inp1 = b-a + inp2, also sollte b-a > -9 und < 9 sein
-                    val dif = bNext!!.value - aNext!!.value
-                    if ( (dif < -9) || (dif > 9) ){
-                        return false
-                    }
-                }
-            }
-            aNext = aNext!!.biggerDigit
-            bNext = bNext!!.biggerDigit
-        }
-        if ( (bNext != null) || (bNext != null) ){
-            println("fehlerbehaftet, längere Teil könnte auch 0 sein")
-            return false //verschiedene Länge
-        }else{
-            return b
-        }
-
+        val amin = a.minValue()
+        val amax = a.maxValue()
+        val bmin = b.minValue()
+        val bmax = b.maxValue()
+        //Schnitt der beiden muss ein Element enthalten
+        val smin = maxOf(amin, bmin)
+        val smax = minOf(amax, bmax)
+        return (smax >= smin)
     }
 
     fun AluToKotlin(code: List<String>, codeNr: Int, wxyz: WXYZ, inputNr: Int): String{
-        println("" + codeNr + ": " +  wxyz)
         if (codeNr >= code.size){
-            return "return (" + wxyz.z.toString() + "==0)"
             if (canBeEqual(wxyz.z,Sys26(0))){
                 if (wxyz.z.inputIndepent()){
                     if (wxyz.z.isZero()){
@@ -298,6 +305,9 @@ fun main() {
                 return "return false"
             }
         }
+        /*if (codeNr >= 1){
+            println("" + (codeNr) + ", "+ code[codeNr-1] +": " +  wxyz)
+        }*/
         val newwxyz = wxyz.copy()
         val com = code[codeNr].split(" ")
         when (com[0]){
@@ -359,7 +369,7 @@ fun main() {
                             }
                         }
                         val cTrue = AluToKotlin(code,  codeNr+1, wxyzCaseTrue, inputNr)
-                        val cFalse = AluToKotlin(code,  codeNr+1, wxyzCaseTrue, inputNr)
+                        val cFalse = AluToKotlin(code,  codeNr+1, wxyzCaseFalse, inputNr)
                         if (cTrue == cFalse){ //liefern sie denselben Output
                             return cTrue
                         }
@@ -378,18 +388,27 @@ fun main() {
         return ""
     }
 
-
-    fun part1(input: List<String>): Int {
-        return 0
-
+    fun monad(input: List<Int>): Boolean{
+        return (input[2] + 6 == input[3]) && (input[5] + 7 == input[6]) && (input[8] + 3 == input[9]) && (input[7] -2 == input[10]) && (input[4] + 1 == input[11]) && (input[1] + 8 == input[12]) && (input[0] -3 == input[13])
     }
 
-    fun part2(input: List<String>): Int {
-        return 0
+
+    fun part1(input: List<String>): String {
+        //aus monadInKotlin ablesbar
+        val s = "91398299697996"
+        if(monad(s.map { it.digitToInt() })){
+            return s
+        }
+        return "FEHLER bei der Handarbeit"
     }
 
-    fun writeFile(filename: String, content: String){
-        File(filename).writeText( content )
+    fun part2(input: List<String>): String {
+        //aus monadInKotlin ablesbar
+        val s = "41171183141291"
+        if(monad(s.map { it.digitToInt() })){
+            return s
+        }
+        return "FEHLER bei der Handarbeit"
     }
 
     // test if implementation meets criteria from the description, like:
@@ -397,15 +416,11 @@ fun main() {
 
     val input = readInput(dayname)
 
-    //println( canBeEqual(Sys26(26),add(Sys26(23),getNextInput(1))) )
+    //val monadInKotlin = AluToKotlin(input, 0, WXYZ(Sys26(0),Sys26(0),Sys26(0),Sys26(0)), 0)
+    //println(monadInKotlin)
 
-    val monadInKotlin = AluToKotlin(input, 0, WXYZ(Sys26(0),Sys26(0),Sys26(0),Sys26(0)), 0)
-    writeFile("MONAD.txt", monadInKotlin )
-
-
-    /*
     println(part1(input))
     println(part2(input))
-     */
+
 
 }
