@@ -187,7 +187,7 @@ fun main() {
     fun shortestPath(map: List<String>, deepth: Int): ULong{
         data class Zustand(val map: List<String>, val lastMove: Move?){
             override fun equals(other: Any?): Boolean {
-                return (other is Zustand)&&(other.map==this.map)&&(other.lastMove == this.lastMove ||( (other.lastMove!=null)&&(this.lastMove!=null)&&(other.lastMove.to == this.lastMove.to)) )
+                return (other is Zustand)&&(other.map==this.map) //&&(other.lastMove == this.lastMove ||( (other.lastMove!=null)&&(this.lastMove!=null)&&(other.lastMove.to == this.lastMove.to)) )
             }
         }
         data class Knoten(val zustand: Zustand, var costs: ULong){
@@ -197,7 +197,7 @@ fun main() {
         }
         data class ZustandLowRam(val player: List<Pair<MatInd,Char>>, val lastMove: Move?){
             override fun equals(other: Any?): Boolean {
-                return (other is ZustandLowRam)&&(other.player==this.player)&&(other.lastMove == this.lastMove ||( (other.lastMove!=null)&&(this.lastMove!=null)&&(other.lastMove.to == this.lastMove.to)) )
+                return (other is ZustandLowRam)&&(other.player==this.player)//&&(other.lastMove == this.lastMove ||( (other.lastMove!=null)&&(this.lastMove!=null)&&(other.lastMove.to == this.lastMove.to)) )
             }
         }
         fun getPlayerAndPos(map: List<String>): List<Pair<MatInd,Char>>{
@@ -234,7 +234,10 @@ fun main() {
                         return newCosts
                     }
                     allReachableStates.add(newKnoten)
-                    alreadyReachedStates.add(newZustandLowRam)
+                    val newPosMoves = getAllPossibleMoves(newZustand.map,newZustand.lastMove, deepth)
+                    if (newPosMoves.size>1){
+                        alreadyReachedStates.add(newZustandLowRam)
+                    }
                 }
             }
             min = allReachableStates.remove()
@@ -264,4 +267,6 @@ fun main() {
     check(part2(readInput(dayname+"_p2_test")) == 44169UL)
     println("Part 2, Tested passed")
     println("Part 2: " + part2(readInput(dayname+"_p2")))
+
+
 }

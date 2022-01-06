@@ -67,7 +67,7 @@ fun main() {
 
     fun AluToKotlin(code: List<String>): String{
         fun codeLine(lineNr: Int, digitNr: Int, wxyz: Pair<Pair<String,String>,Pair<String,String>>, range: Pair<Pair<Range,Range>,Pair<Range,Range>>, short: Boolean = false): String{
-            println("Params:" + lineNr + ","+ digitNr + wxyz + range + short)
+            //println("Params:" + lineNr + ","+ digitNr + wxyz + range + short)
             if (!short){
                 var w = wxyz.first.first
                 var x = wxyz.first.second
