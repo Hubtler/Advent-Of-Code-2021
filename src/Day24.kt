@@ -1,5 +1,3 @@
-import java.io.File
-
 fun main() {
     data class AbstractDigit(var value: Int ){
         var inputNr: Int? = null
@@ -36,29 +34,29 @@ fun main() {
                 return value.toString()
             }else{
                 if (value > 0){
-                    return "input[" + inputNr + "] + " + value
+                    return "input[$inputNr] + $value"
                 }
                 if (value == 0){
-                    return "input[" + inputNr + "]"
+                    return "input[$inputNr]"
                 }
                 //otherwise value < 0
-                return "input[" + inputNr + "] " + value
+                return "input[$inputNr] $value"
             }
         }
     }
 
-    class Sys26{
+    class Sys26(initValue: Int = 0) {
         var smallest: AbstractDigit
         var biggest: AbstractDigit
 
-        constructor( initValue: Int = 0){
+        init {
             smallest = AbstractDigit(initValue % 26)
             biggest = smallest
             var next = initValue / 26
             while (next > 0){
                 val nextDigit = AbstractDigit(next % 26)
                 newBiggest(nextDigit)
-                next = next / 26
+                next /= 26
             }
         }
         fun newSmallest( s: AbstractDigit ){
@@ -74,7 +72,7 @@ fun main() {
             biggest = b
         }
         fun copy(): Sys26{
-            var s = Sys26(smallest.value)
+            val s = Sys26(smallest.value)
             s.smallest.inputNr = smallest.inputNr
 
             var next = smallest
@@ -194,7 +192,6 @@ fun main() {
             }
             val value = aD.value + bD.value
             if (value >= 26) {
-                //println("Fehler, es gibt beim Addieren zweier Digits einen Übertrag (im 26er System): " + aD.toString() + " + " + bD.toString())
                 return Pair(AbstractDigit(value % 26), true)
             } else {
                 val s = AbstractDigit(value)
@@ -207,9 +204,9 @@ fun main() {
         var bNext: AbstractDigit? = b.smallest
         var uebertrag = false
         while ((aNext != null) && (bNext != null)) {
-            var sNext = addDigits(aNext, bNext)
+            val sNext = addDigits(aNext, bNext)
             if (uebertrag){
-                var sNext2 = addDigits(sNext.first, AbstractDigit(1))
+                val sNext2 = addDigits(sNext.first, AbstractDigit(1))
                 uebertrag = sNext.second || sNext2.second
                 s.newBiggest(sNext2.first)
             }else{
@@ -222,13 +219,13 @@ fun main() {
         }
         if (uebertrag){
             if (aNext!=null){
-                val sNext = addDigits(AbstractDigit(aNext.value),AbstractDigit(1)).first //TODO Annahme, es entstehen keine weiteren Überschläge
+                val sNext = addDigits(AbstractDigit(aNext.value),AbstractDigit(1)).first //Annahme, es entstehen keine weiteren Überschläge
                 sNext.inputNr = aNext.inputNr
                 s.newBiggest(sNext)
                 aNext = aNext.biggerDigit
             }
             if (bNext!=null){
-                val sNext = addDigits(AbstractDigit(bNext.value),AbstractDigit(1)).first //TODO Annahme, es entstehen keine weiteren Überschläge
+                val sNext = addDigits(AbstractDigit(bNext.value),AbstractDigit(1)).first // Annahme, es entstehen keine weiteren Überschläge
                 sNext.inputNr = bNext.inputNr
                 s.newBiggest(sNext)
                 bNext = bNext.biggerDigit
@@ -294,9 +291,6 @@ fun main() {
                 if (wxyz.z.inputIndepent()){
                     if (wxyz.z.isZero()){
                         return "return true"
-                    }else{
-                        println("Fall tritt nie ein, bei Return Z")
-                        return "return false"
                     }
                 }else{
                     return "return (" + wxyz.z.toString() + "==0)"
@@ -305,9 +299,6 @@ fun main() {
                 return "return false"
             }
         }
-        /*if (codeNr >= 1){
-            println("" + (codeNr) + ", "+ code[codeNr-1] +": " +  wxyz)
-        }*/
         val newwxyz = wxyz.copy()
         val com = code[codeNr].split(" ")
         when (com[0]){
@@ -352,7 +343,7 @@ fun main() {
                     newwxyz.setWXYZ(com[1], mod26(newwxyz.getWXYZ(com[1])))
                     return AluToKotlin(code, codeNr+1, newwxyz, inputNr)
                 }
-            "eql"   -> //TODO hier kann man noch besser vergleichen, z.B. ist digit in 0..9, digit+12 dann in 12..21, diese können also nicht gleich sein
+            "eql"   ->
                 {   val wxyzCaseTrue = newwxyz.copy()
                     wxyzCaseTrue.setWXYZ(com[1],Sys26(1))
                     val wxyzCaseFalse = newwxyz.copy()
@@ -360,13 +351,8 @@ fun main() {
                     val v1 = newwxyz.getWXYZ(com[1])
                     val v2 = newwxyz.getWXYZ(com[2])
                     if (canBeEqual(v1,v2)){
-                        if (v1.inputIndepent() && v2.inputIndepent()){
-                            if (v1.value() == v2.value()){
-                                return AluToKotlin(code,  codeNr+1, wxyzCaseTrue, inputNr)
-                            }else{
-                                println("FALL TRITT NIE EIN, da v1 ja nicht gleich v2 sein kann")
-                                return AluToKotlin(code,  codeNr+1, wxyzCaseFalse, inputNr)
-                            }
+                        if ( (v1.inputIndepent() && v2.inputIndepent())&& (v1.value() == v2.value()) ){
+                            return AluToKotlin(code,  codeNr+1, wxyzCaseTrue, inputNr)
                         }
                         val cTrue = AluToKotlin(code,  codeNr+1, wxyzCaseTrue, inputNr)
                         val cFalse = AluToKotlin(code,  codeNr+1, wxyzCaseFalse, inputNr)
@@ -392,8 +378,7 @@ fun main() {
         return (input[2] + 6 == input[3]) && (input[5] + 7 == input[6]) && (input[8] + 3 == input[9]) && (input[7] -2 == input[10]) && (input[4] + 1 == input[11]) && (input[1] + 8 == input[12]) && (input[0] -3 == input[13])
     }
 
-
-    fun part1(input: List<String>): String {
+    fun part1(): String {
         //aus monadInKotlin ablesbar
         val s = "91398299697996"
         if(monad(s.map { it.digitToInt() })){
@@ -402,7 +387,7 @@ fun main() {
         return "FEHLER bei der Handarbeit"
     }
 
-    fun part2(input: List<String>): String {
+    fun part2(): String {
         //aus monadInKotlin ablesbar
         val s = "41171183141291"
         if(monad(s.map { it.digitToInt() })){
@@ -413,14 +398,11 @@ fun main() {
 
     // test if implementation meets criteria from the description, like:
     val dayname = "Day24"
+    val monadInKotlin = AluToKotlin(readInput(dayname), 0, WXYZ(Sys26(0),Sys26(0),Sys26(0),Sys26(0)), 0)
+    println(monadInKotlin)
 
-    val input = readInput(dayname)
-
-    //val monadInKotlin = AluToKotlin(input, 0, WXYZ(Sys26(0),Sys26(0),Sys26(0),Sys26(0)), 0)
-    //println(monadInKotlin)
-
-    println(part1(input))
-    println(part2(input))
+    println(part1())
+    println(part2())
 
 
 }
