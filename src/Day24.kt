@@ -178,7 +178,24 @@ fun main() {
             aNext = aNext.biggerDigit
             bNext = bNext.biggerDigit
         }
-
+        if (uebertrag){
+            if (aNext!=null){
+                val sNext = addDigits(AbstractDigit(aNext.value),AbstractDigit(1)).first //TODO Annahme, es entstehen keine weiteren Überschläge
+                sNext.inputNr = aNext.inputNr
+                s.newBiggest(sNext)
+                aNext = aNext.biggerDigit
+            }
+            if (bNext!=null){
+                val sNext = addDigits(AbstractDigit(bNext.value),AbstractDigit(1)).first //TODO Annahme, es entstehen keine weiteren Überschläge
+                sNext.inputNr = bNext.inputNr
+                s.newBiggest(sNext)
+                bNext = bNext.biggerDigit
+            }
+            if ( (aNext==null) && (bNext == null) ) {
+                val sNext = AbstractDigit(1)
+                s.newBiggest(sNext)
+            }
+        }
         while (aNext != null) {
             val sNext = AbstractDigit(aNext.value)
             sNext.inputNr = aNext.inputNr
@@ -218,9 +235,68 @@ fun main() {
         }
     }
 
+    fun canBeEqual(a: Sys26, b: Sys26): Boolean{
+        //Idee: für die Inputs, jedes mal die Werte 0 bis 9 einsetzen, und schauen, ob es wahr sein kann
+        if (a.inputIndepent() && b.inputIndepent()){
+            return (a.value() == b.value())
+        }
+        var aNext: AbstractDigit? = a.smallest
+        var bNext: AbstractDigit? = b.smallest
+        var b = true //können gleich sein
+        while ( (aNext != null) && (bNext != null) ){
+            if (aNext!!.isDigit() && bNext!!.isDigit()){
+                b = b && (aNext!!.value == bNext!!.value)
+            }else{
+                if (aNext!!.isDigit()){ // also a = b + inp
+                    val dif =  aNext!!.value - bNext!!.value
+                    if ( (dif < 0) || (dif > 9) ){
+                        return false //TODO Problem, falls überschlag entsteht
+                    }
+                }
+                if (bNext!!.isDigit()){ // also b = a + inp
+                    val dif =  bNext!!.value - aNext!!.value
+                    if ( (dif < 0) || (dif > 9) ){
+                        return false
+                    }
+                }
+                if (!(aNext!!.isDigit()) && !(bNext!!.isDigit())){
+                    // a + inp1 = b + inp2, also inp1 = b-a + inp2, also sollte b-a > -9 und < 9 sein
+                    val dif = bNext!!.value - aNext!!.value
+                    if ( (dif < -9) || (dif > 9) ){
+                        return false
+                    }
+                }
+            }
+            aNext = aNext!!.biggerDigit
+            bNext = bNext!!.biggerDigit
+        }
+        if ( (bNext != null) || (bNext != null) ){
+            println("fehlerbehaftet, längere Teil könnte auch 0 sein")
+            return false //verschiedene Länge
+        }else{
+            return b
+        }
+
+    }
+
     fun AluToKotlin(code: List<String>, codeNr: Int, wxyz: WXYZ, inputNr: Int): String{
+        println("" + codeNr + ": " +  wxyz)
         if (codeNr >= code.size){
             return "return (" + wxyz.z.toString() + "==0)"
+            if (canBeEqual(wxyz.z,Sys26(0))){
+                if (wxyz.z.inputIndepent()){
+                    if (wxyz.z.isZero()){
+                        return "return true"
+                    }else{
+                        println("Fall tritt nie ein, bei Return Z")
+                        return "return false"
+                    }
+                }else{
+                    return "return (" + wxyz.z.toString() + "==0)"
+                }
+            }else{
+                return "return false"
+            }
         }
         val newwxyz = wxyz.copy()
         val com = code[codeNr].split(" ")
@@ -267,32 +343,35 @@ fun main() {
                     return AluToKotlin(code, codeNr+1, newwxyz, inputNr)
                 }
             "eql"   -> //TODO hier kann man noch besser vergleichen, z.B. ist digit in 0..9, digit+12 dann in 12..21, diese können also nicht gleich sein
-                {   val wxyz1 = newwxyz.copy()
-                    wxyz1.setWXYZ(com[1],Sys26(1))
-                    val wxyz2 = newwxyz.copy()
-                    wxyz2.setWXYZ(com[1],Sys26(0))
-                    val c1 = AluToKotlin(code,  codeNr+1, wxyz1, inputNr)
-                    val c2 = AluToKotlin(code,  codeNr+1, wxyz2, inputNr)
-                    if (c1!=c2){
-                        val v1 = newwxyz.getWXYZ(com[1])
-                        val v2 = newwxyz.getWXYZ(com[2])
+                {   val wxyzCaseTrue = newwxyz.copy()
+                    wxyzCaseTrue.setWXYZ(com[1],Sys26(1))
+                    val wxyzCaseFalse = newwxyz.copy()
+                    wxyzCaseFalse.setWXYZ(com[1],Sys26(0))
+                    val v1 = newwxyz.getWXYZ(com[1])
+                    val v2 = newwxyz.getWXYZ(com[2])
+                    if (canBeEqual(v1,v2)){
                         if (v1.inputIndepent() && v2.inputIndepent()){
                             if (v1.value() == v2.value()){
-                                return c1
+                                return AluToKotlin(code,  codeNr+1, wxyzCaseTrue, inputNr)
                             }else{
-                                return c2
+                                println("FALL TRITT NIE EIN, da v1 ja nicht gleich v2 sein kann")
+                                return AluToKotlin(code,  codeNr+1, wxyzCaseFalse, inputNr)
                             }
                         }
+                        val cTrue = AluToKotlin(code,  codeNr+1, wxyzCaseTrue, inputNr)
+                        val cFalse = AluToKotlin(code,  codeNr+1, wxyzCaseTrue, inputNr)
+                        if (cTrue == cFalse){ //liefern sie denselben Output
+                            return cTrue
+                        }
                         var s = "if (" + v1 + " == " + v2 + "){\n"
-                        s += "   " + c1 + "\n"
+                        s += "   " + cTrue + "\n"
                         s += "}else{ \n"
-                        s += "   " + c2  + "\n"
+                        s += "   " + cFalse  + "\n"
                         s += "}"
                         return s
                     }else{
-                        return c1
+                        return AluToKotlin(code,  codeNr+1, wxyzCaseFalse, inputNr)
                     }
-
                 }
         }
         println("ERROR, gibt keinen Befehl mehr")
@@ -317,6 +396,9 @@ fun main() {
     val dayname = "Day24"
 
     val input = readInput(dayname)
+
+    //println( canBeEqual(Sys26(26),add(Sys26(23),getNextInput(1))) )
+
     val monadInKotlin = AluToKotlin(input, 0, WXYZ(Sys26(0),Sys26(0),Sys26(0),Sys26(0)), 0)
     writeFile("MONAD.txt", monadInKotlin )
 
