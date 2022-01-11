@@ -1,7 +1,8 @@
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.system.measureNanoTime
-import kotlin.system.measureTimeMillis
+
+//typealias Map = List<String> //zur Optimierung ggf. nochmal mit List<List<Char>>, oder fixen Arrays umsetzen.
+//auf jeden Fall ohne Strings, und nur mit dem Abspeichern des nötigsten
 
 fun main() {
     fun toString(map: List<String>): String{
@@ -11,6 +12,12 @@ fun main() {
         }
         return s
     }
+
+
+    /*data class Map(var map: List<String>){
+        //Methoden "frei" (MatInd): boolean, "getPlayer": List<Char>, player(MatInd): Char
+    }*/
+
 
     data class MatInd(var z: Byte, var s: Byte){
         constructor(z: Int, s: Int) : this(z.toByte(),s.toByte())
@@ -57,7 +64,7 @@ fun main() {
         }
         fun columnIsWrong(s: Int, deepth: Int): Boolean{
             for (z in 2..deepth+1){ //gehe alle Zeilen durch
-                val p = map[z][s]!! //Der Eintrag in der Zeile,Spalte
+                val p = map[z][s] //Der Eintrag in der Zeile,Spalte
                 if ((p in goals.keys) && !playerInCorrectColumn(MatInd(z,s)) ){ //ist dieser Eintrag ein Spieler, und ist dieser in der falschen Spalte
                         return true //so ist die spalte falsch
                 }
@@ -100,6 +107,7 @@ fun main() {
                 //ist man in falschen spalte, so ist die Spalte auch falsch! (falls man IN dem Raum steht)
                 if (columnIsWrong(p.spalte(), deepth)){
                     posMoves.add(Move(p,to))
+                    return posMoves
                 }
             }
             to = p.under() //nach unten nur, wenn er in richtige Spalte läuft
@@ -184,89 +192,110 @@ fun main() {
 
     val costs = mutableMapOf('A' to 1UL, 'B' to 10UL, 'C' to 100UL, 'D' to 1000UL)
 
-    fun shortestPath(map: List<String>, deepth: Int): ULong{
-        data class Zustand(val map: List<String>, val lastMove: Move?){
-            override fun equals(other: Any?): Boolean {
-                return (other is Zustand)&&(other.map==this.map) //&&(other.lastMove == this.lastMove ||( (other.lastMove!=null)&&(this.lastMove!=null)&&(other.lastMove.to == this.lastMove.to)) )
+    data class ZustandLowRam(val player: List<Pair<MatInd,Char>>, val lastMove: Move?){
+        override fun equals(other: Any?): Boolean {
+            return (other is ZustandLowRam)&&(other.player==this.player)//&&(other.lastMove == this.lastMove ||( (other.lastMove!=null)&&(this.lastMove!=null)&&(other.lastMove.to == this.lastMove.to)) )
+        }
+    }
+    /*data class Zustand(val map: List<String>, val lastMove: Move?){
+        override fun equals(other: Any?): Boolean {
+            return (other is Zustand)&&(other.map==this.map) //&&(other.lastMove == this.lastMove ||( (other.lastMove!=null)&&(this.lastMove!=null)&&(other.lastMove.to == this.lastMove.to)) )
+        }
+    }*/
+    data class rekZustand(val map: List<String>, val lastMove: Move?, var lastZustand: rekZustand? = null)
+
+    fun getPlayerAndPos(map: List<String>): List<Pair<MatInd,Char>>{
+        val player = ArrayList<Pair<MatInd,Char>>()
+        for (z in map.indices){
+            for (s in map[z].indices){
+                val c = map[z][s]
+                if (c in 'A'..'D'){
+                    player.add(Pair(MatInd(z,s),c))
+                }
             }
         }
-        data class Knoten(val zustand: Zustand, var costs: ULong){
+        return player
+    }
+    fun shortestPath(map: List<String>, deepth: Int): ULong{
+        data class Knoten(val zustand: rekZustand, var costs: ULong){
             override fun equals(other: Any?): Boolean {
                 return (other is Knoten) && (zustand.equals(other.zustand))
             }
         }
-        data class ZustandLowRam(val player: List<Pair<MatInd,Char>>, val lastMove: Move?){
-            override fun equals(other: Any?): Boolean {
-                return (other is ZustandLowRam)&&(other.player==this.player)//&&(other.lastMove == this.lastMove ||( (other.lastMove!=null)&&(this.lastMove!=null)&&(other.lastMove.to == this.lastMove.to)) )
-            }
-        }
-        fun getPlayerAndPos(map: List<String>): List<Pair<MatInd,Char>>{
-            val player = ArrayList<Pair<MatInd,Char>>()
-            for (z in map.indices){
-                for (s in map[z].indices){
-                    val c = map[z][s]
-                    if (c in 'A'..'D'){
-                        player.add(Pair(MatInd(z,s),c))
-                    }
-                }
-            }
-            return player
-        }
         val allReachableStates = PriorityQueue<Knoten>(compareBy{it.costs})
+        val allReachableStatesMap = mutableMapOf<ZustandLowRam, ULong>()
         val alreadyReachedStates = mutableSetOf<ZustandLowRam>()
 
 
-        var min = Knoten(Zustand(map, null), 0UL)
-        var debugKosten = 0UL
-        while ( true ){
-            if (min.costs > debugKosten +1000UL){
-                println("minKosten: " + min.costs + " | Anzahl Möglichkeiten: " + allReachableStates.size + " | abgearbeiteten: " + alreadyReachedStates.size )
-                debugKosten = min.costs
-            }
+        var min = Knoten(rekZustand(map, null), 0UL)
+        while ( !isReady(min.zustand.map, deepth) ){
             val posMoves = getAllPossibleMoves(min.zustand.map,min.zustand.lastMove, deepth)
             for (move in posMoves){
-                val newZustand = Zustand(makeMove(min.zustand.map,move),move)
-                val newCosts = min.costs + costs[min.zustand.map[move.from.zeile()][move.from.spalte()]]!!
+                var newZustand = rekZustand(makeMove(min.zustand.map,move),move)
+                var newCosts = min.costs + costs[min.zustand.map[move.from.zeile()][move.from.spalte()]]!!
+                var newMoves = getAllPossibleMoves(newZustand.map, newZustand.lastMove,deepth)
+                while (newMoves.size==1){
+                    newZustand = rekZustand(makeMove(newZustand.map,newMoves[0]), newMoves[0])
+                    newCosts += costs[newZustand.map[newMoves[0].to.zeile()][newMoves[0].to.spalte()]]!!
+                    newMoves = getAllPossibleMoves(newZustand.map, newMoves[0],deepth)
+                }
+                newZustand.lastZustand = min.zustand
                 val newKnoten = Knoten(newZustand, newCosts)
-                val newZustandLowRam = ZustandLowRam(getPlayerAndPos(newZustand.map), move)
-                if (!alreadyReachedStates.contains(newZustandLowRam)){
-                    if (isReady(newZustand.map, deepth)){
-                        return newCosts
+                val newZustandLowRam = ZustandLowRam(getPlayerAndPos(newZustand.map), newZustand.lastMove)
+                val oldCosts = allReachableStatesMap.getOrDefault(newZustandLowRam, ULong.MAX_VALUE)
+                val c =  (oldCosts == ULong.MAX_VALUE)
+                val b = (oldCosts > newKnoten.costs) // ist der Zustand aber schon mit geringeren Kosten vorhanden, dann nicht
+                if (b){
+                    allReachableStatesMap[newZustandLowRam] = newKnoten.costs
+                    if (!c){
+                        allReachableStates.remove(newKnoten)
+                        allReachableStates.add(newKnoten)
                     }
+                }
+                if (!alreadyReachedStates.contains(newZustandLowRam) && c){
                     allReachableStates.add(newKnoten)
-                    val newPosMoves = getAllPossibleMoves(newZustand.map,newZustand.lastMove, deepth)
-                    if (newPosMoves.size>1){
-                        alreadyReachedStates.add(newZustandLowRam)
-                    }
                 }
             }
             min = allReachableStates.remove()
+            alreadyReachedStates.add(ZustandLowRam(getPlayerAndPos(min.zustand.map), min.zustand.lastMove))
+            allReachableStatesMap.remove(ZustandLowRam(getPlayerAndPos(min.zustand.map), min.zustand.lastMove))
         }
+        /*fun gibAus(rZ: rekZustand){
+            if (rZ.lastZustand!=null){
+                gibAus(rZ.lastZustand!!)
+            }
+            println("")
+            println(toString(rZ.map))
+        }
+        gibAus(min.zustand)*/
         return min.costs
     }
 
     fun part1(input: List<String>): ULong {
-        val map = input.map { it.replace(' ','#') }
+        val map = input
         return shortestPath(map, 2)
     }
 
     fun part2(input: List<String>): ULong {
-        val map = input.map { it.replace(' ','#') }
-        //TODO Zeilen einfügen (und selben Input wie bei part1 nehmen)
+        val map = (input.subList(0,3) + "  #D#C#B#A#" + "  #D#B#A#C#" + input.subList(3,5))
         return shortestPath(map,4)
     }
 
     // test if implementation meets criteria from the description, like:
     val dayname = "Day23"
 
-    check(part1(readInput(dayname+"_test")) == 12521UL)
+    val testInput = readInput(dayname+"_test")
+    val input = readInput(dayname)
+
+    check(part1(testInput) == 12521UL)
     println("Part 1, Tested passed")
-    println("Part 1: " + part1(readInput(dayname)))
+    println("Part 1: " + part1(input))
 
-
-    check(part2(readInput(dayname+"_p2_test")) == 44169UL)
+    check(part2(testInput) == 44169UL)
     println("Part 2, Tested passed")
-    println("Part 2: " + part2(readInput(dayname+"_p2")))
+    println("Part 2: " + part2(input))
+
+
 
 
 }
